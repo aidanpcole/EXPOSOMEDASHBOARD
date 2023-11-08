@@ -58,27 +58,19 @@ const sidebarContentController = function (slide) {
     let allButResources = [checkies[0],
       checkies[1],
       checkies[2],
-      checkies[3],
-      checkies[4],
-      checkies[5],
-      checkies[6],
-      checkies[7],
-      checkies[8],
-      checkies[9]];
-    let justLayers = [checkies[0], checkies[1], checkies[2], checkies[3], checkies[4], checkies[5], checkies[6], checkies[7], checkies[8], checkies[9]];
+      checkies[3]];
 
-    checkies[0].addEventListener("change", TWTENCheck);
-    checkies[1].addEventListener("change", TWELECheck);
-    checkies[2].addEventListener("change", TWTWECheck);
-    checkies[3].addEventListener("change", TWTHICheck);
-    checkies[4].addEventListener("change", TWFOUCheck);
-    checkies[5].addEventListener("change", TWFIFCheck);
-    checkies[6].addEventListener("change", TWSIXCheck);
-    checkies[7].addEventListener("change", TWSEVCheck);
-    checkies[8].addEventListener("change", TWEIGCheck);
-    checkies[9].addEventListener("change", TWNINCheck);
+    checkies[0].addEventListener("change", PMTFVCheck);
+    checkies[1].addEventListener("change", OZONECheck);
+    checkies[2].addEventListener("change", NOTWOCheck);
+    checkies[3].addEventListener("change", LIGHTCheck);
+    console.log("before check");
     allButResources.forEach(abr => abr.addEventListener("change", onCheck));
-    layerGroup.clearLayers();
+		map.eachLayer(function(layer) {
+  	if (!!layer.toGeoJSON) {
+    map.removeLayer(layer);
+  	}
+		});
     checkies[0].click();
   }
 };
