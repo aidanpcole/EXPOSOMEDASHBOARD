@@ -9,35 +9,25 @@ L.Control.SliderControl = L.Control.extend({
         range: false,
         follow: false,
         alwaysShowDate: false,
+        orderMarkers: true,
+        orderDesc: false, 
         rezoom: null
     },
 
     initialize: function(options) {
         L.Util.setOptions(this, options);
         this._layer = this.options.layer;
+        L.extend(this, L.Mixin.Events);
     },
 
-    setPosition: function(position) {
-        var map = this._map;
-
-        if (map) {
-            map.removeControl(this);
-        }
-
-        this.options.position = position;
-
-        if (map) {
-            map.addControl(this);
-        }
-        this.startSlider();
-        return this;
-    },
 
     onAdd: function(map) {
         this.options.map = map;
 
         // Create a control sliderContainer with a jquery ui slider
-        var sliderContainer = L.DomUtil.create('div', 'slider', this._container);
+        this.container = L.DomUtil.create('div','',this._container);
+        this.sliderBoxContainer = L.DomUtil.create('div','slider',this.container);
+      	var sliderContainer = L.DomUtil.create('div','',this.sliderBoxContainer);
         $(sliderContainer).append('<div id="leaflet-slider" style="width:200px"><div class="ui-slider-handle"></div><div id="slider-timestamp" style="width:200px; margin-top:13px; background-color:#FFFFFF; text-align:center; border-radius:5px;"></div></div>');
         //Prevent map panning/zooming while using the slider
         $(sliderContainer).mousedown(function() {
@@ -54,19 +44,59 @@ L.Control.SliderControl = L.Control.extend({
         var options = this.options;
         this.options.layers = [];
 
+        function compare( a, b ) {
+            var valA = null;
+            var valB = null;
+
+            if(a.features && a.features.properties && a.feature.properties[options.timeAttribute]){
+                valA = a.feature.properties[options.timeAttribute];
+            }else if(a.options[options.timeAttribute]){
+                valA = a.options[options.timeAttribute];
+            }
+            if(b.features && b.features.properties && b.feature.properties[options.timeAttribute]){
+                valB = b.feature.properties[options.timeAttribute];
+            }else if(b.options[options.timeAttribute]){
+                valB = b.options[options.timeAttribute];
+            }
+            if(valA && valB) {
+                if (valA < valB) {
+                    return -1;
+                }
+                if (valA > valB) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+
         //If a layer has been provided: calculate the min and max values for the slider
         if (this._layer) {
             var index_temp = 0;
+            var templayers = [];
             this._layer.eachLayer(function(layer) {
-                options.layers[index_temp] = layer;
-                ++index_temp;
+                templayers.push(layer);
             });
+            
+            if (options.orderMarkers) {
+            	templayers = templayers.sort(compare);
+            	
+            	if (options.orderDesc) {
+            		templayers = templayers.reverse();
+            	}
+            }
+            
+            var that = this; 
+            templayers.forEach(function (layer) {
+            	options.layers[index_temp] = layer;
+            	++index_temp
+            });
+            
             options.maxValue = index_temp - 1;
             this.options = options;
         } else {
             console.log("Error: You have to specify a layer via new SliderControl({layer: your_layer});");
         }
-        return sliderContainer;
+        return this.container;
     },
 
     onRemove: function(map) {
@@ -74,7 +104,8 @@ L.Control.SliderControl = L.Control.extend({
         for (i = this.options.minValue; i < this.options.maxValue; i++) {
             map.removeLayer(this.options.layers[i]);
         }
-        $('#leaflet-slider').remove();
+        this.container.remove();
+        //maybe need to add clear timestamp? 
     },
 
     slide: function(e, ui) {
@@ -83,20 +114,21 @@ L.Control.SliderControl = L.Control.extend({
         if (!!_options.layers[ui.value]) {
             // If there is no time property, this line has to be removed (or exchanged with a different property)
             if (_options.layers[ui.value].feature !== undefined) {
-                if (_options.layers[ui.value].feature.properties.time) {
-                    if (_options.layers[ui.value]) $('#slider-timestamp').html(_options.layers[ui.value].feature.properties.time.substr(0, 19));
+                if (_options.layers[ui.value].feature.properties[_options.timeAttribute]) {
+                    if (_options.layers[ui.value]) $('#slider-timestamp').html(_options.layers[ui.value].feature.properties.time(0,19));
                 } else {
                     console.error("You have to have a time property");
                 }
             } else {
                 // set by leaflet Vector Layers
                 if (_options.layers[ui.value].options.time) {
-                    if (_options.layers[ui.value]) $('#slider-timestamp').html(_options.layers[ui.value].options.time.substr(0, 19));
+                    if (_options.layers[ui.value]) $('#slider-timestamp').html(_options.layers[ui.value].options.time.substr(0,19));
                 } else {
                     console.error("You have to have a time property");
                 }
             }
-
+						
+						var layers = [];
             var i;
             // clear markers
             for (i = _options.minValue; i <= _options.maxValue; i++) {
@@ -106,6 +138,7 @@ L.Control.SliderControl = L.Control.extend({
                 // jquery ui using range
                 for (i = ui.values[0]; i <= ui.values[1]; i++) {
                     if (_options.layers[i]) {
+                    	  layers.push(_options.layers[i]);
                         map.addLayer(_options.layers[i]);
                         fg.addLayer(_options.layers[i]);
                     }
@@ -113,6 +146,7 @@ L.Control.SliderControl = L.Control.extend({
             } else if (_options.follow) {
                 for (i = ui.value - _options.follow + 1; i <= ui.value; i++) {
                     if (_options.layers[i]) {
+                    		layers.push(_options.layers[i]);
                         map.addLayer(_options.layers[i]);
                         fg.addLayer(_options.layers[i]);
                     }
@@ -120,6 +154,7 @@ L.Control.SliderControl = L.Control.extend({
             } else {
                 for (i = _options.minValue; i <= ui.value; i++) {
                     if (_options.layers[i]) {
+                    		layers.push(_options.layers[i]);
                         map.addLayer(_options.layers[i]);
                         fg.addLayer(_options.layers[i]);
                     }
@@ -131,7 +166,8 @@ L.Control.SliderControl = L.Control.extend({
                 maxZoom: _options.rezoom
             });
         }
-    },
+      },
+    
 
     startSlider: function() {
         _options = this.options;
@@ -142,7 +178,9 @@ L.Control.SliderControl = L.Control.extend({
             if (_options.range) _options.values = [_options.minValue, _options.maxValue];
             else _options.value = _options.maxValue;
         }
-        $("#leaflet-slider").slider({
+        var timestampContainer = $('#slider-timestamp');
+        var that = this;
+        $(this.sliderBoxContainer).slider({
             range: _options.range,
             value: _options.value,
             values: _options.values,
@@ -152,9 +190,11 @@ L.Control.SliderControl = L.Control.extend({
             slide: this.slide
         });
         if (!_options.range && _options.alwaysShowDate) {
-            $('#slider-timestamp').html(_options.layers[index_start].options.time.substr(0, 19));
+            $(timestampContainer).html(_options.layers[index_start].options.time.substr(0,19));
         }
+        var layers = [];
         for (i = _options.minValue; i <= index_start; i++) {
+        		layers.push(_options.layers[i]);
             _options.map.addLayer(_options.layers[i]);
         }
     }

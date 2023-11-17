@@ -44,7 +44,6 @@ map.addControl(layerControl);
 
 sidebarContentController("story-slide");
 
-L.control.browserPrint({position: 'bottomright'}).addTo(map);
 
 let dataT = [];
 
@@ -480,27 +479,127 @@ NOTWOP = L.layerGroup([layerNO_1990,layerNO_1995,layerNO_2000,layerNO_2005,layer
 LIGHTP = L.layerGroup([layerLIGHT_2012,layerLIGHT_2013,layerLIGHT_2014,layerLIGHT_2015,layerLIGHT_2016,layerLIGHT_2017,layerLIGHT_2018,layerLIGHT_2019,layerLIGHT_2020,layerLIGHT_2021]); 
 
 
+const picsvars = {
+  PMTFV: PMTFVP,
+  OZONE: OZONEP,
+  NOTWO: NOTWOP,
+  LIGHT: LIGHTP,
+};
 
 
-
-
-
-
-
-/* maybe add if statement to layergroup assignment (if checkies == 0 then L.layergroup PM 2.5 layers, if checkies == 1 then L.layergroup OZONE layers, etc.)*/
-picGroup = L.layerGroup([layerPM_2010,layerPM_2011,layerPM_2012,layerPM_2013,layerPM_2014,layerPM_2015,layerPM_2016,layerPM_2017,layerPM_2018,layerPM_2019]);
+let picGroup = determinePics();
 var sliderControl = L.control.sliderControl({position: "topright", layer: picGroup, timeAttribute: 'time', follow: 1, startTimeIdx: 0, timeStrLength: 4, alwaysShowDate: true});
-map.addControl(sliderControl);
-setInterval(function(){
-            var current = $('#leaflet-slider').slider("value");
+
+
+
+
+function initializeTime() {
+  console.log("INITIALIZETIME FN");
+  	/* need to remove the initial pm 2.5 slider and update based on checks*/
+	map.addControl(sliderControl);
+	setInterval(function(){
+            var current = $(this.sliderBoxContainer).slider("value");
             var max = sliderControl.options.maxValue + 1;
             var step = ++current % max;
-            $('#leaflet-slider').slider("value", step);
+            $(this.sliderBoxContainer).slider("value", step);
             sliderControl.slide(null, {value: step});
         }, 1500);
-sliderControl.startSlider();
+  console.log(sliderControl);
+  sliderControl.startSlider();
+}
+
+
+
+function determinePics() {
+	console.log("IN DETERMINEPICS");
+	let pics = [];
+	let names = [];
+	if (checkies === undefined) {
+		pics = PMTFVP;
+		console.log(pics);
+	} else {
+	checkies.forEach(c => {
+		if (c.checked === true) {
+			console.log(checkies);
+			let n = c.id;
+			names.push(n);
+		}
+	});
+	console.log(names);
+	names.forEach(name => {
+		if (polygonLayers.includes(name)) {
+			pics = picsvars[name];
+		}
+	});
+	console.log(pics);
+} return pics;
+}
+
+
+let currentLayer = "White Canvas";
+map.on('baselayerchange', function(e) {
+	currentLayer = e.name;
+})
+
+
+// === Determine & Update Map From Check boxes == //
+function determineTime() {
+	  console.log("IN DETERMINE TIME");
+	  map.removeControl(sliderControl);
+	  $('#leaflet-slider').remove();
+	  $(this.sliderBoxContainer).remove();
+	  $('#slider-timestamp').remove();
+	  $(this.timestampContainer).remove();
+	  $(this.sliderContainer).remove();
+	  $(this.container).remove();
+	  $(this._container).remove();
+		map.removeControl(geocoder);
+		before = map.hasLayer(velocityLayer);
+		map.eachLayer(function(layer) {
+    map.removeLayer(layer);
+		});
+		if (before == true) {
+			map.addLayer(velocityLayer);
+		} else {
+			map.removeLayer(velocityLayer);
+		}
+		if (currentLayer != "White Canvas") {
+			map.addLayer(baseLayers[currentLayer]);
+		} else {
+			map.addLayer(baseLayers["White Canvas"]);
+		}
+	picGroupoink = determinePics();
+  var newsliderControl = L.control.sliderControl({position: "topright", layer: picGroupoink, timeAttribute: 'time', follow: 1, startTimeIdx: 0, timeStrLength: 4, alwaysShowDate: true});
+	map.addControl(newsliderControl);
+	map.addControl(geocoder);
+	setInterval(function(){
+            var current = $(this.sliderBoxContainer).slider("value");
+            var max = newsliderControl.options.maxValue + 1;
+            var step = ++current % max;
+            $(this.sliderBoxContainer).slider("value", step);
+            newsliderControl.slide(null, {value: step});
+        }, 1500);
+  console.log(newsliderControl);
+  newsliderControl.startSlider();
+  	document.querySelector('#PMTFV').onclick = (e) => {
+  		map.removeControl(newsliderControl);
+  	}
+  	document.querySelector('#OZONE').onclick = (e) => {
+  		map.removeControl(newsliderControl);
+  	}
+  	document.querySelector('#NOTWO').onclick = (e) => {
+  		map.removeControl(newsliderControl);
+  	}
+  	document.querySelector('#LIGHT').onclick = (e) => {
+  		map.removeControl(newsliderControl);
+  	}
+}
+
+
 initializeMap();
-L.Control.geocoder({position: 'topright', placeholder: 'Search for location...'}).addTo(map);
+initializeTime();
+var geocoder = L.Control.geocoder({position: 'topright', placeholder: 'Search for location...'})
+geocoder.addTo(map);
 L.control.zoom({
   position: 'bottomright'
 }).addTo(map);
@@ -509,8 +608,10 @@ L.control.zoom({
 map.setView([21.79, 78.43], 5);
 
 
+
+let velocityLayer;
 $.getJSON("https://raw.githubusercontent.com/aidanpcole/EXPOSOMEDASHBOARD/main/data/DataForMap/wind-global.json", function(data) {
-  var velocityLayer = L.velocityLayer({
+  velocityLayer = L.velocityLayer({
     displayValues: false,
     displayOptions: {
       velocityType: "Global Wind",
@@ -520,6 +621,5 @@ $.getJSON("https://raw.githubusercontent.com/aidanpcole/EXPOSOMEDASHBOARD/main/d
     data: data,
     maxVelocity: 15
   });
-
   layerControl.addOverlay(velocityLayer, "Wind - Global");
 });
