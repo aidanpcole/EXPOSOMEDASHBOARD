@@ -72,11 +72,11 @@ function onEachFeatureLIGHT(feature, layer) {
 function style(feature) {
   return {
     fillColor: '#fff9db',
-    weight: 0.5,
-    opacity: 0.7,
+    weight: 0.9,
+    opacity: 0.9,
     color: "gray",
-    fillOpacity: 0.5,
-    colorOpacity: 0.1,
+    fillOpacity: 0.1,
+    colorOpacity: 0.9,
   };
 }
 
