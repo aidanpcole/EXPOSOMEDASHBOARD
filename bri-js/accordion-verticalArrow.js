@@ -70,11 +70,12 @@ const accordionVertfunctionArrow = function () {
     /* this is not defined in css, just added to html */
     triggers.push(btn);
     let target = h.parentElement.parentElement.nextElementSibling;
-
+		let init = document.querySelector(".accordion-vert-trigger").getAttribute("aria-expanded");
     btn.onclick = () => {
       let expanded = btn.getAttribute("aria-expanded") === "true";
-      if (expanded) {
+      if (expanded | init === null) {
         closeItemArrow(target, btn);
+        init = true;
       } else {
         openItemArrow(target, btn);
       }

@@ -516,7 +516,6 @@ function determinePics() {
 	let names = [];
 	if (checkies === undefined) {
 		pics = PMTFVP;
-		console.log(pics);
 	} else {
 	checkies.forEach(c => {
 		if (c.checked === true) {
@@ -525,13 +524,11 @@ function determinePics() {
 			names.push(n);
 		}
 	});
-	console.log(names);
 	names.forEach(name => {
 		if (polygonLayers.includes(name)) {
 			pics = picsvars[name];
 		}
 	});
-	console.log(pics);
 } return pics;
 }
 
@@ -579,7 +576,6 @@ function determineTime() {
             $(this.sliderBoxContainer).slider("value", step);
             newsliderControl.slide(null, {value: step});
         }, 1500);
-  console.log(newsliderControl);
   newsliderControl.startSlider();
   	document.querySelector('#PMTFV').onclick = (e) => {
   		map.removeControl(newsliderControl);

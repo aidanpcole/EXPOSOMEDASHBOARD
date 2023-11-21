@@ -125,7 +125,7 @@ function updateMap(url, styleType, bindings) {
 function initializeMap() {
   console.log("INITIALIZEMAP FN");
   updateMap(mapvars.PMTFV, stylevars.PMTFV, onEachFeaturePMTFV);
-  sidebarContentController("story-slide");
+  sidebarContentController("filter-slide");
 }
 
 function check(box) {
@@ -157,7 +157,6 @@ function determineMap() {
       names.push(n);
     }
   });
-  console.log(names);
   names.forEach(name => {
 //    if (pointLayers.includes(name)) {
 //      if (name === "parks") {

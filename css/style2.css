@@ -118,7 +118,7 @@ input.largerCheck {
 #over_map_side2 {
   position: absolute;
   top: 8%;
-  left: 24%;
+  left: 23%;
   z-index: 101;
   width: 2em;
   transition:
@@ -131,7 +131,7 @@ input.largerCheck {
 #over_map_side {
   position: absolute;
   top: 8%;
-  left: 0;
+  left: 0; 
   z-index: 99;
 }
 /* == for data table == */

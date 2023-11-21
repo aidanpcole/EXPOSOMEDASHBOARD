@@ -98,7 +98,6 @@ const isSidebarOpen = function (slide) {
 
 sidebar.addEventListener('click', ({ target }) => {
   if (target.matches('button')) {
-    console.log(target);
     let slide = target.getAttribute("class");
     isSidebarOpen(slide);
   }
